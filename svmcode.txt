@@ -1,0 +1,102 @@
+
++import sys
++import time
++import re
++import nltk
++from sklearn.externals import joblib
++
++#Processing posts
++
++def preprocessposts(post):
++    
++    #Convert www.* or https?://* to URL
++    post = re.sub('((www\.[^\s]+)|(https?://[^\s]+))','URL',post)
++    
++    #Convert @username to __HANDLE
++    post = re.sub('@[^\s]+','__HANDLE',post)  
++    
++    #Replace #word with word
++    post = re.sub(r'#([^\s]+)', r'\1', post)
++    
++    #trim
++    post = post.strip('\'"')
++    
++    # Repeating words like happyyyyyyyy
++    rpt_regex = re.compile(r"(.)\1{1,}", re.IGNORECASE)
++    post = rpt_regex.sub(r"\1\1", post)
++    
++    #Emoticons
++    emoticons = \
++    [
++     ('__positive__',[ ':-)', ':)', '(:', '(-:', \
++                       ':-D', ':D', 'X-D', 'XD', 'xD', \
++                       '<3', ':\*', ';-)', ';)', ';-D', ';D', '(;', '(-;', ] ),\
++     ('__negative__', [':-(', ':(', '(:', '(-:', ':,(',\
++                       ':\'(', ':"(', ':((', ] ),\
++    ]
++
++    def replace_parenth(arr):
++       return [text.replace(')', '[)}\]]').replace('(', '[({\[]') for text in arr]
++    
++    def regex_join(arr):
++        return '(' + '|'.join( arr ) + ')'
++
++    emoticons_regex = [ (repl, re.compile(regex_join(replace_parenth(regx))) ) \
++            for (repl, regx) in emoticons ]
++    
++    for (repl, regx) in emoticons_regex :
++        post = re.sub(regx, ' '+repl+' ', post)
++
++     #Convert to lower case
++    post = post.lower()
++    
++    return post
++
++#Stemming of posts
++
++def stem(post):
++        stemmer = nltk.stem.PorterStemmer()
++        post_stem = ''
++        words = [word if(word[0:2]=='__') else word.lower() \
++                    for word in post.split() \
++                    if len(word) >= 3]
++        words = [stemmer.stem(w) for w in words] 
++        post_stem = ' '.join(words)
++        return post_stem
++
++
++#Predict the sentiment
++
++def predict(post,classifier):
++    
++    post_processed = stem(preprocessposts(post))
++             
++    if ( ('__positive__') in (post_processed)):
++         sentiment  = 1
++         return sentiment
++        
++    elif ( ('__negative__') in (post_processed)):
++         sentiment  = 0
++         return sentiment       
++    else:
++        
++        X =  [post_processed]
++        sentiment = classifier.predict(X)
++        return (sentiment[0])
++ 
++# Main function
++
++def main():
++    print('Loading the Classifier, please wait....')
++    classifier = joblib.load('svmClassifier.pkl')
++    print('READY')
++    post = ' '
++    for post in sys.stdin:
++            print(predict(post, classifier))
++            
++            
++            
++if __name__ == "__main__":
++    main()
++        
++

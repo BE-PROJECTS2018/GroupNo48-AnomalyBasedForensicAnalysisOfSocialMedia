@@ -1,0 +1,21 @@
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+import nltk
+nltk.download('punkt')
+
+example_sent = "Good person do not even speak the bad thing infact they don't talk about the evil thing and person ...then why u do talk every time about Congress"
+
+stop_words = set(stopwords.words('english'))
+
+word_tokens = word_tokenize(example_sent)
+
+filtered_sentence = [w for w in word_tokens if not w in stop_words]
+
+filtered_sentence = []
+
+for w in word_tokens:
+    if w not in stop_words:
+        filtered_sentence.append(w)
+
+print(word_tokens)
+print(filtered_sentence)

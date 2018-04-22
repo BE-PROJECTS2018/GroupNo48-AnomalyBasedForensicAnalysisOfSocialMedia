@@ -1,0 +1,11 @@
+import csv
+from textblob import TextBlob
+
+infile = 'narendram.csv'
+
+with open(infile, 'r') as csvfile:
+    rows = csv.reader(csvfile)
+    for row in rows:
+        sentence = row[0]
+        blob = TextBlob(sentence)
+        print (blob.sentiment)
